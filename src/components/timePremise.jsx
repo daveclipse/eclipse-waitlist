@@ -26,7 +26,7 @@ export default function TimePremise() {
 
   return (
     <motion.div
-      className="relative flex items-center justify-center pt-10 h-[33vh] overflow-hidden"
+      className="relative flex items-center justify-center pt-10 h-[40vh] overflow-hidden"
       animate={{ backgroundColor: isNight ? '#1D225B' : '#F89C1B' }}
       transition={{ duration: 1 }}
     >

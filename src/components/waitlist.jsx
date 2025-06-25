@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Geist, Geist_Mono } from "next/font/google";
 import { db } from "@/utils/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, where, getDocs} from "firebase/firestore";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -16,11 +16,13 @@ const neighborhoods = [
   "Pilsen / Bridgeport",
   "West Loop / Fulton Market",
   "River North / Gold Coast",
-  "The Loop",
+  "The Loop / South Loop",
+  "No preference"
 ];
 
 export default function Waitlist() {
   const [expanded, setExpanded] = useState(true);
+  const [userLocationType, setUserLocationType] = useState("");
   const [formData, setFormData] = useState({
     phone: "",
     firstName: "",
@@ -45,7 +47,7 @@ export default function Waitlist() {
     let formatted = "+1";
     if (area) {
       formatted += ` (${area}`;
-      if (normalized.length > 3) formatted += `)`; // only add closing ) if middle digits exist
+      if (normalized.length > 3) formatted += `)`;
     }
     if (middle) formatted += ` ${middle}`;
     if (last) formatted += `-${last}`;
@@ -105,13 +107,37 @@ export default function Waitlist() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-
+  
+    const newErrors = {};
     try {
-      await addDoc(collection(db, "users"), {
+      const rawPhone = formData.phone.replace(/\D/g, "");
+      const targetCollection = formData.locationType === "No" ? "notChicago" : "users";
+  
+      const q = query(
+        collection(db, targetCollection),
+        where("phone", "==", rawPhone)
+      );
+      const querySnapshot = await getDocs(q);
+  
+      if (!querySnapshot.empty) {
+        newErrors.phone = "This number has already been used to sign up.";
+        setErrors((prevErrors) => ({ ...prevErrors, ...newErrors }));
+        return;
+      }
+      // await fetch("/api/send-sms", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify({ phone: rawPhone, firstName: formData.firstName }),
+      // });
+      await addDoc(collection(db, targetCollection), {
         ...formData,
+        phone: rawPhone,
         createdAt: serverTimestamp(),
       });
-
+  
+      setUserLocationType(formData.locationType);
       setFormData({
         phone: "",
         firstName: "",
@@ -126,27 +152,44 @@ export default function Waitlist() {
       setSubmitted(true);
     } catch (error) {
       console.error("Error adding user:", error);
-      alert("Something went wrong. Please try again.");
+      setErrors({ general: "Something went wrong. Please try again." });
     }
   };
 
   return (
     <div className="font-hind font-obv-light flex items-center justify-center h-full text-white px-4">
       <AnimatePresence mode="wait">
-        {submitted && (
-          <motion.div
-            key="confirmation"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            className="text-center max-w-md"
-          >
-            <h2 className="text-2xl font-semibold mb-2 font-obv-light">You're on the list ✅</h2>
-            <p className="text-white/80 font-obv-light">
-              Thanks for signing up. We'll be in touch soon!
+      {submitted && (
+        <motion.div
+          key="confirmation"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          className="text-center max-w-md"
+        >
+          {userLocationType === "No" ? (
+            <div>
+              <h2 className="text-5xl mt-[5vh] font-semibold mb-2 font-ekl">
+                Thanks for signing up.
+              </h2>
+              <p className="text-white/80 font-obv-light">
+              Unfortunately, Eclipse hasn't launched in your city yet, but we'll be in contact soon.
             </p>
-          </motion.div>
-        )}
+            </div>
+          ) : (
+            <div>
+              <h2 className="text-6xl mt-[5vh] font-semibold mb-2 font-ekl">
+                Welcome to eclipse.
+              </h2>
+              <p className="text-white/80 font-obv-light">
+              Thanks for signing up.<br />
+              We'll see you out in Chicago this July!
+            </p>
+            </div>
+            
+          )}
+        </motion.div>
+      )}
 
         {expanded && !submitted && (
           <motion.form
@@ -173,7 +216,7 @@ export default function Waitlist() {
               name="phone"
               type="tel"
               maxLength={18}
-              placeholder="Phone Number (e.g., +1 312 555 1234)"
+              placeholder="Phone Number"
               value={formData.phone}
               onChange={handleChange}
               className="font-obv-light w-full px-4 py-2 border border-white/20 backdrop-blur-2xl bg-white/30 text-white placeholder-white/60 focus:outline-none rounded-lg"
@@ -196,7 +239,7 @@ export default function Waitlist() {
                 onChange={handleChange}
                 className="font-obv-light w-full px-4 ml-2 py-2 border border-white/20 backdrop-blur-2xl bg-white/30 text-white focus:outline-none rounded-lg"
               >
-                <option value="">Gender</option>
+                <option value="" disabled hidden>Gender</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
                 <option value="nonbinary">Nonbinary</option>
@@ -217,7 +260,7 @@ export default function Waitlist() {
               }
               className="font-obv-light w-full px-4 py-2 border border-white/20 backdrop-blur-2xl bg-white/30 text-white focus:outline-none rounded-lg"
             >
-              <option value="">Sexual Identification</option>
+              <option value="" disabled hidden>Sexual Identification</option>
               <option value="Straight">Straight</option>
               <option value="Gay">Gay</option>
               <option value="Lesbian">Lesbian</option>
@@ -225,6 +268,8 @@ export default function Waitlist() {
               <option value="Pansexual">Pansexual</option>
               <option value="Queer">Queer</option>
               <option value="Other">Other</option>
+              <option value="None">Prefer Not to Answer</option>
+
             </select>
             {errors.sexualIdentification && <p className="text-red-300 text-sm">{errors.sexualIdentification}</p>}
 
@@ -234,7 +279,7 @@ export default function Waitlist() {
               onChange={handleChange}
               className="font-obv-light w-full px-4 py-2 border border-white/20 backdrop-blur-2xl bg-white/30 text-white focus:outline-none rounded-lg"
             >
-              <option value="">Favorite Neighborhood</option>
+              <option value="" disabled hidden>Favorite Neighborhoods to Go Out In</option>
               {neighborhoods.map((n) => (
                 <option key={n} value={n}>
                   {n}
@@ -244,24 +289,24 @@ export default function Waitlist() {
             {errors.primaryNeighborhood && <p className="text-red-300 text-sm">{errors.primaryNeighborhood}</p>}
 
             <div>
-              <label className="text-sm font-obv-light text-white mb-1 block">
-                Do you live in Chicago or a suburb?
-              </label>
-              <div className="flex space-x-4">
-                {["Chicago", "Suburb"].map((value) => (
-                  <label key={value} className="text-white font-obv-light">
-                    <input
-                      type="radio"
-                      name="locationType"
-                      value={value}
-                      checked={formData.locationType === value}
-                      onChange={handleChange}
-                      className="mr-2"
-                    />
-                    {value}
-                  </label>
-                ))}
-              </div>
+            <label className="text-sm font-obv-light text-white mb-1 block">
+              Do you live in Chicago or a nearby suburb?
+            </label>
+            <div className="flex space-x-4">
+              {["Yes", "No"].map((value) => (
+                <label key={value} className="text-white font-obv-light">
+                  <input
+                    type="radio"
+                    name="locationType"
+                    value={value}
+                    checked={formData.locationType === value}
+                    onChange={handleChange}
+                    className="mr-2"
+                  />
+                  {value}
+                </label>
+              ))}
+            </div>
               {errors.locationType && <p className="text-red-300 text-sm">{errors.locationType}</p>}
             </div>
 

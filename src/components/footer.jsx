@@ -10,7 +10,7 @@ export default function Footer() {
         <a href="https://instagram.com/theeclipseapp" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300">
           <FaInstagram size={32} />
         </a>
-        <a href="https://tiktok.com/@theeclipseapp" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300">
+        <a href="https://www.tiktok.com/@its_eclipse_" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300">
           <FaTiktok size={32} />
         </a>
         <a href="mailto:hello@theeclipseapp.com" className="hover:text-gray-300">
@@ -18,7 +18,7 @@ export default function Footer() {
         </a>
       </div>
 
-      <p className="text-sm sm:text-base">Contact: hello@theeclipseapp.com</p>
+      <p className="text-sm sm:text-base">hello@theeclipseapp.com</p>
       <p className="text-xs text-white/60 mt-1">© Eclipse Platforms, Inc.</p>
     </footer>
   );
