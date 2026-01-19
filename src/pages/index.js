@@ -12,6 +12,8 @@ import TheCore from "@/components/coreValues";
 import WhatIsEclipse from "@/components/whatEclipse";
 import Head from "next/head";
 
+console.log("[pages/index.js] Module loaded at", new Date().toISOString());
+
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 

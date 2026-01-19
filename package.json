@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "clean": "node -e \"const fs = require('fs'); const path = require('path'); const dir = '.next'; if (fs.existsSync(dir)) { fs.rmSync(dir, { recursive: true, force: true }); console.log('Cleaned .next directory'); } else { console.log('.next directory does not exist'); }\"",
-    "clean:all": "node -e \"const fs = require('fs'); const dirs = ['.next', 'node_modules/.cache']; dirs.forEach(d => { if (fs.existsSync(d)) { fs.rmSync(d, { recursive: true, force: true }); console.log(`Cleaned ${d}`); } });\""
+    "clean:all": "node -e \"const fs = require('fs'); const dirs = ['.next', 'node_modules/.cache']; dirs.forEach(d => { if (fs.existsSync(d)) { fs.rmSync(d, { recursive: true, force: true }); console.log(`Cleaned ${d}`); } });\"",
+    "dev:clean": "rimraf .next .turbo && next dev"
   },
   "dependencies": {
     "firebase": "^11.7.3",
@@ -24,6 +25,7 @@
     "@tailwindcss/postcss": "^4",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.4",
+    "rimraf": "^6.0.1",
     "tailwindcss": "^4.1.8"
   }
 }

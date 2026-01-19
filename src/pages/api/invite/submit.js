@@ -1,4 +1,6 @@
+console.log("[api/invite/submit.js] Module loading at", new Date().toISOString());
 import { adminDb } from "../../../firebaseAdmin";
+console.log("[api/invite/submit.js] Module loaded, adminDb imported at", new Date().toISOString());
 import twilio from "twilio";
 
 function isPhoneDigits10or11(v) {
@@ -31,6 +33,7 @@ async function createUniqueInviteDoc(uses = 3) {
 }
 
 export default async function handler(req, res) {
+  console.log("[api/invite/submit.js] Handler called at", new Date().toISOString());
   try {
     if (req.method !== "POST") return res.status(405).json({ ok: false, error: "method_not_allowed" });
 
