@@ -5,10 +5,14 @@ export default async function handler(req, res) {
     return res.status(405).end("Method not allowed");
   }
 
-  const { phone, firstName } = req.body;
+  const { phone, firstName, inviteLink } = req.body;
 
   if (!phone) {
     return res.status(400).json({ error: "Missing phone number" });
+  }
+
+  if (!inviteLink) {
+    return res.status(400).json({ error: "Missing invite link" });
   }
 
   try {
@@ -17,8 +21,17 @@ export default async function handler(req, res) {
       process.env.TWILIO_AUTH_TOKEN
     );
 
+    const greeting = firstName ? `, ${firstName}` : "";
+
     await client.messages.create({
-      body: `Congrats ${firstName || ""}! You made the cut-—you're one of the first to get early access to Eclipse, launching exclusively in Chicago on the App Store this Month! We'll text you key updates and the download link as soon as we go live!`,
+      body: `Welcome to Eclipse${greeting}.
+
+You’re officially in.
+
+Your private invite link (3 uses):
+${inviteLink}
+
+Send it to up to 3 friends for first access.`,
       messagingServiceSid: process.env.TWILIO_MESSAGING_SERVICE_SID,
       to: `+${phone}`,
     });
