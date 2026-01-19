@@ -119,14 +119,14 @@ export default async function handler(req, res) {
       const greeting = firstName ? `, ${firstName}` : "";
 
       await client.messages.create({
-        body: `Welcome to Eclipse${greeting}.
+        body: `You're officially in${greeting}.
 
-You're officially in.
+We'll notify you before the public launch to secure first access.
 
-Your private invite link (3 uses):
-${myInviteLink}
+The public waitlist is closed. The only way friends can join is through your private link below.
 
-Send it to up to 3 friends for first access.`,
+Your private invite link (limited to 3 sign-ups):
+${myInviteLink}`,
         messagingServiceSid: process.env.TWILIO_MESSAGING_SERVICE_SID,
         to: `+${rawPhone}`,
       });
