@@ -1,4 +1,5 @@
 import { adminDb } from "../../../firebaseAdmin";
+import twilio from "twilio";
 
 function isPhoneDigits10or11(v) {
   return /^[0-9]{10,11}$/.test(v);
@@ -104,6 +105,32 @@ export default async function handler(req, res) {
     // 4) Create a new personal invite for THIS new user (3 uses)
     const myCode = await createUniqueInviteDoc(3);
     const myInviteLink = `https://joineclipse.co/?code=${myCode}`;
+
+    // 5) Send SMS with invite link
+    try {
+      const client = twilio(
+        process.env.TWILIO_ACCOUNT_SID,
+        process.env.TWILIO_AUTH_TOKEN
+      );
+
+      const greeting = firstName ? `, ${firstName}` : "";
+
+      await client.messages.create({
+        body: `Welcome to Eclipse${greeting}.
+
+You're officially in.
+
+Your private invite link (3 uses):
+${myInviteLink}
+
+Send it to up to 3 friends for first access.`,
+        messagingServiceSid: process.env.TWILIO_MESSAGING_SERVICE_SID,
+        to: `+${rawPhone}`,
+      });
+    } catch (smsError) {
+      // Log SMS error but don't fail the request - user still gets their invite link
+      console.error("Failed to send SMS:", smsError);
+    }
 
     return res.status(200).json({ ok: true, myInviteLink });
   } catch (e) {
