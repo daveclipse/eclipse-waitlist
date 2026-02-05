@@ -6,6 +6,7 @@ export default function Document() {
       <Head>
         <link rel="icon" href="/eclipse_logo_white.png" />
         <meta name="theme-color" content="#1D225B" />
+        <meta name="robots" content="noindex, nofollow" />
       </Head>
       <body className="antialiased">
         <Main />
